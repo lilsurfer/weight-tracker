@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Weight Tracker – 10000 kg Goal</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Weight Tracker – 10 000 kg Goal</h1>
+  <ul class="nav">
+    <li><a href="#leo" class="active">Leo</a></li>
+    <li><a href="#jake">Jake</a></li>
+  </ul>
+
+  <div id="leo" class="panel">
+    <h2>Leo's Sets</h2>
+    <table id="leo-table">
+      <thead><tr><th>#</th><th>Weight (kg)</th><th>Reps</th><th>Total (kg)</th><th>Remove</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <form onsubmit="addSet('leo');return false;" class="add-form">
+      <input type="number" id="leo-weight" placeholder="Weight (kg)" min="0" />
+      <input type="number" id="leo-reps" placeholder="Reps" min="0" />
+      <input type="submit" value="Add Set" />
+    </form>
+    <p class="summary" id="leo-summary">Total: 0 kg</p>
+  </div>
+
+  <div id="jake" class="panel" style="display:none;">
+    <h2>Jake's Sets</h2>
+    <table id="jake-table">
+      <thead><tr><th>#</th><th>Weight (kg)</th><th>Reps</th><th>Total (kg)</th><th>Remove</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <form onsubmit="addSet('jake');return false;" class="add-form">
+      <input type="number" id="jake-weight" placeholder="Weight (kg)" min="0" />
+      <input type="number" id="jake-reps" placeholder="Reps" min="0" />
+      <input type="submit" value="Add Set" />
+    </form>
+    <p class="summary" id="jake-summary">Total: 0 kg</p>
+  </div>
+
+  <p class="overall" id="overall-summary">Overall Lifted: 0 kg | Remaining: 10000 kg</p>
+
+  <script>
+    const goal = 10000;
+    const state = { leo: [], jake: [] };
+    function render(p){
+      const tbody=document.querySelector(`#${p}-table tbody`);
+      tbody.innerHTML='';
+      state[p].forEach((s,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${i+1}</td><td>${s.weight}</td><td>${s.reps}</td><td>${s.total}</td><td><button onclick="removeSet('${p}',${i})">X</button></td>`;
+        tbody.appendChild(tr);
+      });
+      const total=state[p].reduce((a,s)=>a+s.total,0);
+      document.getElementById(`${p}-summary`).textContent=`Total: ${total} kg`;
+      updateOverall();
+    }
+    function addSet(p){
+      const w=parseFloat(document.getElementById(`${p}-weight`).value);
+      const r=parseInt(document.getElementById(`${p}-reps`).value);
+      if(!w||!r){alert('Enter weight and reps');return;}
+      state[p].push({weight:w,reps:r,total:w*r});
+      document.getElementById(`${p}-weight`).value='';
+      document.getElementById(`${p}-reps`).value='';
+      render(p);
+    }
+    function removeSet(p,i){state[p].splice(i,1);render(p);}
+    function updateOverall(){
+      const overall=state.leo.reduce((a,s)=>a+s.total,0)+state.jake.reduce((a,s)=>a+s.total,0);
+      const remaining=Math.max(goal-overall,0);
+      document.getElementById('overall-summary').textContent=`Overall Lifted: ${overall} kg | Remaining: ${remaining} kg`;
+    }
+    document.querySelectorAll('.nav a').forEach(a=>{
+      a.addEventListener('click',e=>{
+        e.preventDefault();
+        document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active'));
+        a.classList.add('active');
+        document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
+        document.querySelector(a.getAttribute('href')).style.display='block';
+      });
+    });
+    window.addEventListener('load',()=>{const saved=localStorage.getItem('retroTracker');if(saved){Object.assign(state,JSON.parse(saved));render('leo');render('jake');}});
+    window.addEventListener('beforeunload',()=>{localStorage.setItem('retroTracker',JSON.stringify(state));});
+  </script>
+</body>
+</html>
